@@ -2,10 +2,10 @@ name: Publish Ark VCS Primary Docker image (amd64)
 
 on: 
   push:
-    branches: [ master, dev ]
+    branches: [ main, dev ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ master, dev ]
+    branches: [ main, dev ]
   workflow_dispatch:
 
 env:
