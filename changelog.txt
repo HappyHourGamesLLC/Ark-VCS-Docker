@@ -1,0 +1,465 @@
+Version 0.10.1 (2025/07/03)
+- Fixed preferences not being saved
+- Fixed commit / shelve window not setting the input on the comment
+- Fixed Linux bug when listening to OS changes that would trigger reconciles that weren't needed
+
+--------
+
+Version 0.10.0 (2025/07/02)
+- ** Data Version upgraded to 7. ** This is a big change affecting serialization, so make sure to backup the server and client before attempting to launch with the new version
+- Added support to Tag changelists
+- New file serialization system with binary support (i.e. some things are now saved in binary instead of text)
+- Added Admin Log to track admin actions (e.g. adding / editing user, creating / editing projects / branches)
+- Added Admin Log panel (Views -> Admin Log)
+- Refactored core to use admin log as a synchronization method instead of having multiple ones (i.e. one for each of projects, branches and users)
+- User password reset is now a separate action from user edit, you just right-click on the user and choose Reset Password (also new cli reset-password command)
+- Comment fields of commit / shelve windows now have the keyboard input by default when opened
+- Commit and shelve windows now support Ctrl+Enter to commit / shelve and Escape to close
+- Reworked situations where server disconnects the client, focusing on login errors
+- Server now gives auth tokens valid for 10 years instead of the old 1 month. Eventually the server will have settings to customize such behaviours, it just doesn't matter for the current users
+- Server now rehashes and stores both password's hash and token's hash. The way it was setup until now, if somebody had access to the server's disk could copy the hashes and impersonate a client (even if some ways were very far-fetched). With this change, even if somebody access the server's disk, they cannot impersonate a user
+- Auth tokens are now tied to a machine and not the user, which means that a user connecting from different machines will have different auth tokens
+- Default .ark_ignore now adds some entries with * prefix to catch certain instances (e.g. *.vs/ as some projects create these not just at the root folder)
+- Reworked how default workspace changelist works (default ws cl cannot be deleted without making another one explicitly the default, committing the ws cl will now create a new empty default ws cl instead of upgrading one of the existing ones to be the default ws cl)
+- Ctrl+A on Changes view will now select all the files that belong to that changelist and not use the previous behaviour of selecting things based on context (it will still do based on context on other places like Files view since a Ctrl+A selecting everything there doesn't make much sense). The old behaviour is maintained in Changes view if you do Ctrl+Shift+A
+- Ctrl+A on a workspace changelist in the Changes view will now select all it's files
+- Fixed workspace changelists with multiple line comments not displaying the quantity of changes on the tooltip
+- Commit and shelve windows now allow tabs to be inserted in the comment
+- Changelist context menu now allows to copy tags and date
+- Updated cli get command to allow getting changelists based on tag name instead of just cl id
+- Added cli tag-list, tag-add and tag-remove commands
+- Added cli reset-password command (and updated user-add / user-edit ones)
+- Fixed MacOS bug that showed local changes after they were committed, requiring a manual reconcile to properly update their status
+
+--------
+
+Version 0.9.13 (2025/03/16)
+- Fixed bug with reconcile when a file wasn't modified but instead deleted and added "at the same time"
+- Added F5 shortcut to reconcile workspace, and Shift+F5 to do a reconcile that discards cached data
+- Cli changes command now displays status ([ ] none, [+] add, [-] del, [*] mod), lock ([  ] none, [LO] lock owner, [LQ] lock queued, [LR] lock remote) and conflict ([  ] none, [NR] needs resolving, [RO] resolved ours, [RT] resolved theirs, [RM] resolved manual). Keep in mind that these cli commands are still not considered done, with some features like locking and conflict resolution still to be tackled)
+
+--------
+
+Version 0.9.12 (2025/02/16)
+- Fixed issue that would cause interrupted reconciles to have files keep the previous checksum, which would then fail to upload to the server until reconcile was done properly again
+- Fixed default .ark_ignore for UE projects
+- Added close button to Diff panel
+
+--------
+
+Version 0.9.11 (2025/02/06)
+- Added experimental diff panel, you can access it at Views -> Diff (Experimental). It allows you to revert individual diff chunks and check differences before committing without having to manually launch diff tool
+- Added a cache for file path -> workspace file, which will accelerate a lot of tasks, specially in cases where you have folders with many files
+- Fixed minidumps in windows being saved in the working directory instead of the app directory
+- Upgraded jai to 0.2.008
+
+--------
+
+Version 0.9.10 (2025/01/16)
+Changes:
+- Copying files after a get is now time sliced, not making Ark unresponsive when getting big quantities of data
+- Ark now displays the progress of copying files so you can get an idea of how long it will take
+- Improved Diff context menus
+- Refactored states of getting files to be more streamlined
+- Shelf window will now allow you to diff the current revision's assets with any other revisions / history of that asset
+- Diff in changelist history can now diff with local file too (either choosing Local or Alt+Double Click)
+- Diff in changelist history now displays the versions of the asset on that branch, not the versions on the current branch we're at
+- Resolve conflicts window now has a default size on opening
+- Open With preference entries now display Application first and hint that the Name is optional (if it isn't present now displays executable name instead of path)
+- Preferences now allows you to set the framerate for the GUI version (if 'auto' is selected - it is by default -, it will get the framerate from the current primary monitor)
+- Reverting operations that would cause for the deletion of directories will now delete these directories if they have ignored files inside
+- Fixed when having a workspace already populated with the data we're getting not triggering the files to be reconciled after getting latest, which meant they stay showing as being added until they were reconciled
+
+--------
+
+Version 0.9.9 (2025/01/03)
+Changes:
+- Data version ugpraded to 6.
+- Refactored how conflicts and merges are handled. They are now stored in .ark/<project_id>/<branch_id>/merge.db / conflict.db (reason for data version 6)
+- Resolve Conflicts in file context menu now has the following options:
+    - Open Window... which launches a new window for conflict resolution of the selected files
+    - Manually... which launches directly the merge app for the file we triggered the context menu
+    - Keep Ours which marks all the selected files with conflicts to keep the local files
+    - Get Theirs which for all selected files with conflicts will copy their respective version that is coming from the server that generated the conflict
+    - Reset which which brings the state back to being in conflict and copies the "Our file" we had when we first resolved it
+- Resolving conflicts now tracks which choice you made and displays it in the tooltip (e.g. Conflict: Resolved (Merged Manually)
+- Added Beyond Compare 5 auto detect in preferences, it's targeting the Pro version since that's the one that supports 3-way merges
+- When merging a file from a branch, but choosing to keep ours, you'll still be able to submit the file to reflect that you actually have merged but decided to keep your current file (it will still send the file in the cl, even though there's no changes. May change or not in the future, we'll see...)
+- Now when launching ark with versions that don't support upgrading a certain data version it will give some explicit message about which versions can be used to upgrade which data versions
+- Fixed merging folders (i.e. submitted in branch a and branch b, and then merged b -> a)
+- Fixed reverting merged folders
+- Fixed go to changelist only listening to enter and not keypad enter
+- Fixed layout of list of files in changelist window
+- Fixed crash when using context menu to switch branches which would trigger the hovered cl to become null because we needed to increase the buffer size
+- Fixed server hanging in an infinite loop when client asked to lock files it didn't have in the asset db yet (i.e. assets that were being merged for the first time in this branch)
+- Fixed merge rules so that files that were merged but had extra local changes before committing actually resolve as not a conflict
+
+--------
+
+Version 0.9.8 (2024/12/11)
+Changes:
+- New changelog format, now everything is just "Changes", because some times things don't really fit Features nor Fixes, order will focus on importance but fixes will tend to be grouped at the bottom
+- Data version upgraded to 5 (when you see this it means that something in the save format changed, so there's a conversion happening which means you cannot go back to a previous version, so please backup before launching this version - actually just backup client and server once in a while anyway!)
+- After server compresses the uploaded data, it will decompress it to ensure it's the same as what was originally sent
+- Right-click on the notifications button shows a context menu that allows you to clear all notifications
+- Workspace can now be removed from the GUI client by going to Workspace->Remove...
+- Current workspace now is shown with a checkmark in the File->Switch Workspace menu
+- Fixed when you have multiple clients running with the same user and you release locks you have, you no longer get notifications on the other clients running that same user (responsible for the data version upgrade to 5)
+- Fixed launching diff was using normalized path (i.e. all lower case), so if you edited the file via diff tool it would update that file path to be normalized instead of keeping the original one
+- Fixed crash if multiple clients were committing at the same time 
+- Fixed workspace not saving after commit (the only consequence would be that if you committed but your commit was not latest, this information would be lost, nothing bad would really happen)
+- Removed an assert that triggered when there's a decompression error (decompression errors are just handled better now)
+
+-------
+
+Version 0.9.7 (2024/12/03)
+Fixes:
+- Removed assert that would trigger when trying to initialize branches when we're creating a workspace on a project with multiple branches (it just shouldn't be there, wouldn't cause any problems, just annoy with a VS debug popup)
+
+--------
+
+Version 0.9.6 (2024/11/26)
+Fixes:
+- Removed gamepad support
+- Ark gui launched without any client wouldn't render until the mouse moved on it
+
+--------
+
+Version 0.9.5 (2024/11/25)
+Features:
+- Added "Optimized Rendering" preference (on by default), which makes Ark render only when needed. In Windows you'll see a drop in GPU usage, and in MacOS both drop in CPU and GPU
+- In Go To Changelist panel (ctrl+G) if you now insert * followed by a number, it will open the latest cl that ends in that number (e.g. if the latest cl is 6382 and you write *203 it will open 6203)
+
+--------
+
+Version 0.9.4 (2024/11/22)
+Features:
+- Refactored how commands are queued. In the past commands were always appended to the end, which meant that some actions were then pushed immediately, which had consequences. So now commands can inject other commands in the queue.
+- Added cli command git-import-list, which allows you to output to a file the commits that you'll be trying to import so you can do some comparisons after the import to make sure nothing was lost
+- Added cli command cl-list which allows you to output to a file the committed cls, mostly for you to compare with what git import said was going to import
+
+Fixes:
+- Files that were deleted on commit still showing as deleted changes until a reconcile was triggered (bug added in 0.9.3)
+- Fixed git-import command (bug added in 0.9.3)
+- When shelving, if we receive a TRANSFER_FAILED_CHECKSUM we'll immediately trigger a full reconcile
+- Built-in server now doesn't get launched anymore when running Ark via cli commands. You'll need to move the .ark_server folder somewhere else, and run server on that new path before using cli commands
+
+--------
+
+Version 0.9.3 (2024/11/17)
+Features:
+- Jai upgraded to 0.1.095
+- Client connections now receive notification when users, projects or branches are changed
+- File menu context "Commit..." now generates a new workspace changelist with only the selected files and dependencies (e.g. parent folders if not committed yet)
+
+Fixes:
+- Login popup close button not disconnecting from the server
+- workspace.db is now loaded and saved normalized (i.e. forward slashes), and duplicate entries are removed
+- Fixed asset database of other branches not being updated, which would result in error spamming when trying to view asset information of cls committed in other branches, and require force rebuilding it upon switching branches
+- Fixed logging issue that could happen on server when trying to do a log tied to a connection with a message that would include %
+- Fixed log spawn when log panel would print messages that have % in them (e.g. ipv6 address)
+
+--------
+
+Version 0.9.2 (2024/11/01)
+Fixes:
+- Merging of files with changes not being properly flagged as merged in windows
+- Branch graph not showing cls we just merged as being merged (i.e. they showed faded)
+- Reverting of merged files with no local changes (i.e. we chose keep ours) staying on workspace cls when they shouldn't
+- Cl history using current branch to get asset names instead of the cl's branch (which would spam error when that asset only exists on the other branch)
+- Files merged that were exactly the same that we had locally being flagged as merged but not on any workspace cl since they had no changes
+- When you have an empty file and you try to get another version that has data, it would be ignored and not downloaded
+- When you went back in history, added a file before it existed, and then got cl when that file was added as empty it would override the file with the empty version and not give conflict
+- Keep theirs when it was a zero size file not actually resolving properly
+- Not being able to Download Chan
+ges from another branch (would leave the client in a bad state until relaunched)
+
+--------
+
+Version 0.9.1 (2024/10/24)
+Fixes:
+- Cli commands not initializing fs listening correctly
+
+--------
+
+Version 0.9.0 (2024/10/23)
+
+Features:
+- C plugin binding (currently windows only)
+- Unreal Engine Plugin 0.1 (currently windows only)
+- New licensing model (Free version with 3 seats)
+- A user now only takes 1 seat, even if connecting multiple times to the server
+- Locks are now displayed in the tooltip, and you can copy them via context menu
+
+Fixes:
+- Open in explorer not working
+- Project database not being saved when a project was edited
+- Crash trying to load a cl that could occur when syncing many cls (a cl could potentially be received but cl file wouldn't be saved)
+- Not being able to unshelve files just added (i.e. only exist on the shelf, not yet committed)
+- Window maximize / dock position is remembered between launches
+- Files with local changes would be flagged as having conflicts when we had the exact same asset revision we're trying to get
+- Crash when trying to lock / unlock large quantities of files (i.e. > 4000)
+- Possible corruption of workspace if 2 clients open it at the same time (now the second client shuts down gracefully)
+
+Notes:
+- Indie licenses were abolished, now there's only Free version and Business license. If you bought an Indie license you should have received a new Business license, please contact licenses@ark-vcs.com if that was not the case.
+
+
+Version 0.8.0 (2024/05/12)
+
+Features:
+- MacOS server / cli / gui!
+- Reworked how notifications get sent, they now are sent based on connection id and not user id (this means that if the same user is connected from 2 machines, he's up to date with notifications)
+- Tooltips now have a delay before showing
+- Moved Open App Folder from Debug to File menu
+- Changed font to be 18pt by default, this way if somebody thinks font is too small they can scale it down and look better than scaling smaller font up
+
+--------
+
+Version 0.7.2 (2024/05/02)
+
+Features:
+- Added support for defining default app to launch for file / extension
+- Double-Click now launches default app for that file (if defined)
+- Alt + Double-Click now launches diff app depending on context (i.e. in history it launches with that version and the previous one, with other panels it uses local version with previous)
+- Refactored how history diff menu is handled, now when in the history it will compare the version from that cl and not the local version
+- Added support for shift + click in changes to select ranges within same changelist
+- Ipv6 address input support in format [ip]:port
+- Upgraded jai to 0.1.089
+- Upgraded glfw to 3.4
+- Upgraded imgui to 1.90.5
+- Upgraded OpenGL to be 4.1 to match between Windows and upcoming MacOS version
+
+Fixes:
+- Server not clearing auth token when it was expired and the user logged in with password
+- Server not loading the license
+- Horizontal scrollbars now always visible to prevent flickering edge case
+
+--------
+
+Version 0.7.1 (2024/04/20)
+
+Fixes:
+- Fixed branch creation when we wouldn't immediately switch to it
+- Fixed branch graph being broken after new branch was created until ark was relaunched
+- Fixed reconcile not handled correctly when files with the same start had to be reconciled (e.g. deleting folder/file.txt and folder/file.txt_old)
+
+--------
+
+Version 0.7.0 (2024/04/10)
+
+Features:
+- Communication encryption, via TLS. Servers create their own certificate / private key on launch for convenience, but also supports dropping one there
+- Login refactored so that the server now tells you if you're setting password or not, and if so you're now presented with confirm password field
+- Changed logging to be tied to connection
+- Started changing how logging is handled so that in the future we can more easily get bug reports that hide any important data
+- Reworked how the whole network was setup. Now memory usage is far more under control when pushing huge shelves
+
+Fixes: 
+- Fixed cli clients not saving logs
+
+--------
+
+Version 0.6.6 (2024/03/17)
+
+Fixes:
+- Changed how listen sockets are setup in order to allow immediate reconnect if crashed
+- Fixed deserializing corrupt network messages (e.g. random ips connecting to server)
+- Fixed current selected workspace not being properly saved / loaded
+- Fixed crash from right click on cl -> download changes when there wasn't already a version of the file locally
+- Fixed adding new project
+- Fixed bug that would cause to never reload .ark_ignore when it didn't have any entries
+- Fixed when OS discards file system events inside a child folder also discarding events from files in upper levels that we'd never know were changed
+- Fixed launching server without -port parameter would use the default 9000 port instead of the port saved in the server config file
+
+--------
+
+Version 0.6.5 (2024/03/13)
+
+Features:
+- New ignore / lock file semantics. Please check https://ark-vcs.com/documentation.html for more information (tl;dr: * supported in the middle and ! at the start of entries for exclusion)
+- New Ignore Inspector panel (Views->Ignore Inspector), to help you understand why something is or isn't ignored in your project
+- Refactored how ws_files are created, including caching of relative paths
+
+Fixes:
+- .ark_ignore file incorrectly reloaded when we couldn't open the file (e.g. text editor had a hold on it). We now will keep retrying until we achieve success
+- Client crash when opening a workspace that is in a changelist that doesn't exist in this project
+- When the server receives Ctrl+C or crashes we try to close the listen socket in order to be able to bind to it straight away
+
+--------
+
+Version 0.6.4 (2024/02/26)
+
+Features:
+- Windows version now has an icon, making it more distinguisable in the taskbar
+
+Fixes:
+- Bug that would disconnect new users without password with unknown user error
+- Bug adding / editing connection that wouldn't properly set default host / port
+
+--------
+
+Version 0.6.3 (2024/02/19)
+
+Fixes:
+- Improved performance building the branch merges in changelist history when multiple branches are involved
+- Fixed horizontal scrollbars in log, changes and changelist details panels
+- Changed diff context menu to show the last 10 entries and place older ones under a sub-menu
+
+--------
+
+Version 0.6.2 (2024/02/16)
+
+Fixes:
+- Fixed bug introduced with utf8 fix from 0.6.1 that would make committing a lot of files extremely sluggish at the start
+- Refactored network packet strategy in order to be more friendly for remote connections and Linux
+- Limited the amount of requests handled, to limit the amount of memory allocated when pushing very big changelists
+
+--------
+
+Version 0.6.1 (2024/02/07)
+
+Features:
+- License changes, now Indie and Business licenses include the free seat from the Free version
+
+Fixes:
+- Bug with not using utf8 when trying to get the ws_file based on path
+- Bug preventing opening shelf window when the workspace changelist it is tied to is empty
+- Incorrect determination of common root changelist when trying to switch between branches if there's a non committed cl along the way
+
+--------
+
+Version 0.6.0 (2024/02/05)
+
+Features:
+- Linux server support
+- Linux cli support
+- Crash dump support: minidumps in Windows, fulldumps in Linux (requires gcore installed, which is part of gdb)
+- Seats-based server license support (free version has 1 seat)
+- Files are now stored compressed, making servers use 40-50% less space depending on data
+- Cli commands implemented / improved: server, init, switch-branch, get, user-list, user-add, user-edit, project-list, branch-list, branch-add, changes, revert, commit
+- Revamp of how cli commands are handled (more commands added, and now parameters are explicity,  e.g. -email instead of -e)
+- git-import cli command, which can be used for copying 1 branch to an Ark server (this was added for testing purposes, but may be useful for somebody)
+
+Fixes:
+- Bugs on server when a client would crash in the middle of a shelve
+- Bugs on client when the server would crash in the middle of a get / shelve
+
+Notes:
+- From this version on, the zip will include ark.exe and ark-linux binaries for Windows and Linux respectively. Currently only x64 versions
+- If you open an older project, depending on the size, it may take a while before ark loads and becomes responsive, given that in this release we upgrade the servers in order to compress all files stored
+
+--------
+
+Version 0.5.1 (2023/11/03)
+
+Fixes:
+- Manual merging not launching merge app
+- Merging branches with multiple changelists that changed the same file not identifying that there was no conflicts
+
+--------
+
+Version 0.5.0 (2023/11/02)
+
+Features:
+- Added branching and merging support (full + cherry pick)
+- New history panel more focused on visibility of branches
+- Added branch colors, which can be changed and synced across the whole project
+- Added Keep Theirs / Ours merge options in addition to Merge Manually
+- Improved how we're listening to OS filesystem changes
+- Stats panel a bit more compact
+- Optimization pass for handling big changelists / commits / repos _much_ faster
+- Added new icon to indicate a file has merge information
+- Files are now alphabetically ordered in workspace changelists
+- Bumped data version to 3
+
+Fixes:
+- Fixed lock assets not properly handled on launch
+- Fixed crash when children files would get asset ids before the parent ids were received
+
+Note:
+- There were a lot of changes to saved formats to support branches, so this is the only version that will upgrade from versions < 0.5.0. From the next update, all that code to support these data version changes will be removed since it doesn't make sense for the project to carry on that tech debt
+
+--------
+
+Version 0.4.1 (2023/08/11)
+
+Features:
+- Added support for "unique" utf8
+
+Fixes:
+- Fixed proper identification of file name when files with ascii only letters were renamed
+
+--------
+
+Version 0.4.0 (2023/08/04)
+
+Features:
+- Added Shelves support
+- Data version upgraded from 1 to 2
+- Added shelf and commit times
+- Added tooltips for workspace files
+- Added way to clear / mark the log 
+- File context menus now allow to copy id, size and checksum
+- Added support for high dpi screens, it defaults to auto (ie asks the monitor), but can be overriden in preferences
+- Added mechanism to check manifest integrity, runs by default when version changes
+- Improvements to Changelist / Shelf windows to be able to inspect every revision
+- Empty workspace changelists now get automatically deleted (unless they are a shelf or a comment set)
+- Improved diffs support via context menu
+- Normalized how cl and asset ids are assigned (now at the project level, refactor necessary before tackling branches)
+
+Fixes:
+- Improved situations that because of way Windows would flag FS changes inside folders, it would cause Ark to reconcile the whole project when it didn't need to
+
+--------
+
+Version 0.3.0 (2023/06/09)
+
+Features:
+- Added locking support
+- Added notifications (i.e. one directional messages between client and server)
+- Added UI notifications (i.e. notifications that show up in the UI and the user has to interact with them)
+- Added Ark window taskbar icon flashing when there are new notifications (will flash until selected)
+- Added notification for users to know there are new changelists committed
+- Added notifications for locks (locks received, lost, requested)
+- Committing now allows you to keep hold of your locks
+- Added support for "open with", allowing you to define application entries to open files
+- Added context menu to commit/changelist/file windows
+- Added context menu to log panel that allows you to open the log file / folder (if you're running a built-in server you can access that too)
+- Added -app-folder parameter that can be used to launch with different app folder name
+- Added preference to choose if you want to have the console for the built-in server visible or not
+
+
+Fixes:
+- Fixed getting a lot of assets (e.g. initial sync of an ongoing project), where it would cause it to jump back and forth to the same manifest and could cause the manifest entry to not be offset properly
+- Fixed incorrect de-serialization of multi line strings
+- Fixed rendering edge cases of ws_files
+- Normalized rendering of ws_cls with multi-line comments across multiple places
+
+--------
+
+Version 0.2.1 (2023/04/24)
+
+Fixes:
+- Fixed usage of getenv Windows API to _wgetenv (the former would only work with ansi usernames...)
+
+--------
+
+Version 0.2.0 (2023/04/24)
+
+Features:
+- Reworked workspace creation to be more streamlined for first workspace
+- Added support for built-in (aka local / personal) server
+- Added support for auto reconnect
+- Added ignore support for exact match (instead of using begins with)
+
+Fixes:
+- Fixed log panel scroll to bottom
+- Fixed merge / diff argument hints not being used as the arguments when no arguments were supplied
+- Fixed bug with "failed to open manifest" when trying to diff a file that belonged to the same manifest chunk we just had opened to append another asset
+
+--------
+
+Version 0.1.0 (2023/03/08)
+
+First version.
