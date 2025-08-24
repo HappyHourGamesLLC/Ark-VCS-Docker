@@ -1,8 +1,17 @@
 # Use Ubuntu for better compatibility with Linux binaries
 FROM ubuntu:22.04
 
-# Install any necessary dependencies
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+# Install any necessary dependencies including X11 libraries
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxtst6 \
+    libxi6 \
+    libxrandr2 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user for security
 RUN useradd -m -s /bin/bash arkuser
