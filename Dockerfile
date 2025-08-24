@@ -1,17 +1,16 @@
-# Use a lightweight base image
-FROM alpine:latest
+# Use Ubuntu for better compatibility with Linux binaries
+FROM ubuntu:22.04
 
 # Install any necessary dependencies
-RUN apk add --no-cache ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user for security
-RUN adduser -D -s /bin/sh arkuser
+RUN useradd -m -s /bin/bash arkuser
 
 # Set working directory
 WORKDIR /app
 
 # Copy the ark binary to the container
-# Assuming the binary is in the same directory as the Dockerfile
 COPY ark /app/ark
 
 # Make the binary executable
@@ -26,7 +25,7 @@ ENV ARK_PORT="9000"
 ENV ARK_ALLOW_DV_UPGRADE="false"
 ENV ARK_ALLOW_NON_EMPTY_PATH="false"
 
-# Expose the default port (can't use variable here)
+# Expose the default port
 EXPOSE 9000
 
 # Switch to non-root user
